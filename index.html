@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polyglot Studio (Responsive & Fast)</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://unpkg.com/monaco-editor@0.45.0/min/vs/editor/editor.main.css">
+    
+    <!-- IMPROVEMENT: The main stylesheet is now external -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="loading-indicator">Initializing...<span id="loading-details">Please wait</span></div>
+    
+    <header class="controls">
+        <h1>Polyglot Studio <sub>Snippets</sub></h1>
+        <div class="buttons">
+            <button id="cmd-toggle-button" title="Toggle Command Prompt"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3zm9.5 5.5h-3a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zm-6.354-.354a.5.5 0 1 0 .708.708l2-2a.5.5 0 0 0 0-.708l-2-2a.5.5 0 1 0-.708.708L4.793 6.5 3.146 8.146z"/></svg><span class="cmd-button-text">CMD</span></button>
+            <button id="share-button" title="Share Code">Share</button>
+            <button id="manage-snippets-button" title="Manage Snippets">Snippets</button>
+            <button id="clear-button" title="Clear all code editors">Clear All</button>
+            <button id="download-button" title="Download current code/project">Download Code</button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="editors-container">
+            <div class="editor-pane"><div class="editor-pane-header"><h2>Structure</h2><select id="html-language-select"><option value="html" selected>HTML</option><option value="markdown">Markdown</option></select></div><div id="html-editor-container" class="monaco-editor-host"></div></div>
+            <div class="editor-pane"><div class="editor-pane-header"><h2>Style</h2><select id="css-language-select"><option value="css" selected>CSS</option><option value="scss">SCSS</option></select></div><div id="css-editor-container" class="monaco-editor-host"></div></div>
+            <div class="editor-pane"><div class="editor-pane-header"><h2>Logic</h2><select id="script-language-select"><option value="javascript" selected>JavaScript</option><option value="typescript">TypeScript</option><option value="jsx">React (JSX)</option><option value="python">Python</option></select></div><div id="script-editor-container" class="monaco-editor-host"></div></div>
+        </div>
+
+        <!-- IMPROVEMENT: Added a resizer handle for responsive pane sizing -->
+        <div class="resizer" id="resizer"></div>
+
+        <div class="preview-and-console-wrapper">
+            <div class="preview-container" id="iframe-container"><h2>Web Preview</h2><iframe id="preview-frame"></iframe></div>
+            <div class="console-output-container" id="output-console-container" style="display:none;"><h2>Console Output</h2><pre id="console-output-py"></pre></div>
+        </div>
+
+        <div id="command-prompt-panel">
+            <div id="command-output"><div class="cmd-line cmd-info">Polyglot Studio CMD [v1.7.0 Snippets]</div><div class="cmd-line cmd-info">(c) 2024 Girish Lade. Type 'help'.</div><div class="cmd-line"></div></div>
+            <div class="command-input-line"><span class="prompt-char">PS ></span><input type="text" id="command-input" autofocus spellcheck="false"></div>
+        </div>
+    </div>
+
+    <footer>Copyright 2024, by Girish Lade</footer>
+    <div id="toast-notification" class="toast">Link copied to clipboard!</div>
+    
+    <!-- Snippet Manager Modal (unchanged structure) -->
+    <div id="snippet-manager-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-button" id="close-snippet-modal">&times;</span>
+            <h2>Snippet Manager</h2>
+            <div class="snippet-actions-bar">
+                 <button id="create-new-snippet-button" class="action-button">Create New Snippet</button>
+                 <button id="export-snippets-button" class="action-button">Export All</button>
+                 <label for="import-snippets-input" class="action-button file-input-label"> Import Snippets <input type="file" id="import-snippets-input" accept=".json" style="display: none;"></label>
+            </div>
+            <div id="snippet-editor-form-container" style="display:none; margin-top: 20px;">
+                 <h3><span id="snippet-form-title">Create New</span> Snippet</h3>
+                 <form id="snippet-form">
+                     <input type="hidden" id="snippet-id-input">
+                     <div class="form-group"> <label for="snippet-language-input">Language:</label> <select id="snippet-language-input" required> <option value="html">HTML</option> <option value="markdown">Markdown</option> <option value="css">CSS</option> <option value="scss">SCSS</option> <option value="javascript">JavaScript</option> <option value="typescript">TypeScript</option> <option value="jsx">React (JSX)</option> <option value="python">Python</option> </select> </div>
+                     <div class="form-group"> <label for="snippet-trigger-input">Trigger Keyword:</label> <input type="text" id="snippet-trigger-input" placeholder="e.g., log, divflex (no spaces)" required pattern="^\S+$"> </div>
+                     <div class="form-group"> <label for="snippet-template-input">Snippet Code (use $CURSOR$ for cursor position):</label> <textarea id="snippet-template-input" rows="8" placeholder="Enter your code snippet here..." required></textarea> </div>
+                     <div class="form-group form-buttons"> <button type="submit" id="save-snippet-button" class="action-button primary">Save Snippet</button> <button type="button" id="cancel-snippet-edit-button" class="action-button">Cancel</button> </div>
+                 </form>
+            </div>
+            <div id="snippet-list-container" style="margin-top: 20px;"> <h3>My Snippets</h3> <div id="user-snippets-list"> <p>No custom snippets yet. Click "Create New Snippet" to add one.</p> </div> </div>
+        </div>
+    </div>
+    
+    <!-- IMPROVEMENT: Scripts are now at the end of the body and deferred to prevent render-blocking. -->
+    <!-- Note: The transpilers (Babel, TypeScript, etc.) are now loaded on-demand by script.js and are not listed here. -->
+    <script defer src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    
+    <!-- Monaco Editor loader -->
+    <script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    
+    <!-- IMPROVEMENT: The main application logic is now in an external file -->
+    <script src="script.js"></script>
+</body>
+</html>
